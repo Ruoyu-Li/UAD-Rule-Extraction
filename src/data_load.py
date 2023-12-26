@@ -67,7 +67,7 @@ def load_cicids(subset):
 
 def load_cicids_custom(subset):
     # df = pd.read_csv(os.path.join(CUSTOM_DATA_DIR, 'CICIDS-2017', f'{subset}.csv'))
-    df = pd.read_csv(os.path.join('/home/lry/pythondata/venv/lry/dataset', 'CICIDS-2017', f'{subset}.csv'))
+    df = pd.read_csv(os.path.join('./dataset', 'CICIDS-2017', f'{subset}.csv'))
 
     # only include two web servers' external comms
     cond = df['dest-ip'].isin(CICIDS_SERVER_IPS)
@@ -155,7 +155,7 @@ def load_unsw(subset):
 
 def load_toniot_custom(subset):
     # df = pd.read_csv(os.path.join(CUSTOM_DATA_DIR, 'TON-IoT', f'{subset}.csv'))
-    df = pd.read_csv(os.path.join('/home/lry/pythondata/venv/lry/dataset', 'TON-IoT', f'{subset}.csv'))
+    df = pd.read_csv(os.path.join('./dataset', 'TON-IoT', f'{subset}.csv'))
 
     # cond = df['src_ip'].isin(TONIOT_SERVER_IPS) | df['dst_ip'].isin(TONIOT_SERVER_IPS) 
     # df = df[cond | (df[CUSTOM_LABEL_COL] != 0)]
@@ -168,9 +168,9 @@ def load_toniot_custom(subset):
     df_att = df[df['label'] == 1]
 
     df_list = [df_att]
-    for f in os.listdir(os.path.join('/home/lry/pythondata/venv/lry/dataset', 'TON-IoT')): 
+    for f in os.listdir(os.path.join('./dataset', 'TON-IoT')): 
         if f.startswith('normal'):
-            df_norm = pd.read_csv(os.path.join('/home/lry/pythondata/venv/lry/dataset', 'TON-IoT', f))#CUSTOM_DATA_DIR
+            df_norm = pd.read_csv(os.path.join('./dataset', 'TON-IoT', f))#CUSTOM_DATA_DIR
             cond = df_norm['src_ip'].isin(['3.122.49.24']) | df_norm['dst_ip'].isin(['3.122.49.24']) # TONIOT_IPS
             df_norm = df_norm[cond]
             df_list.append(df_norm)

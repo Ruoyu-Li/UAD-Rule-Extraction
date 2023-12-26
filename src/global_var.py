@@ -3,10 +3,10 @@ import os
 SEED = 9
 DEVICE = 0
 
-PROJ_ROOT = '/home/lry/pythondata/venv/lry'
+PROJ_ROOT = '.'
 
 # CICIDS-2017
-CICIDS_DIR = '/home/lry/pythondata/dataset/CICIDS-2017/csv'
+CICIDS_DIR = './dataset/CICIDS-2017/csv'
 CICIDS_DICT = {
     'Monday': 'Monday-WorkingHours',
     'Tuesday': 'Tuesday-WorkingHours',
@@ -43,11 +43,11 @@ CICIDS_FEAT_COLS = [
 CICIDS_LABEL_COL = ' Label'
 CICIDS_SERVER_IPS = ['192.168.10.50', '192.168.10.51']
 
-CICIDS_PCAP_DIR = '/home/lry/pythondata/dataset/CICIDS-2017/pcap'
-CICIDS_TIME = '/home/lry/pythondata/dataset/CICIDS-2017/pcap/attack_time.csv'
+CICIDS_PCAP_DIR = './dataset/CICIDS-2017/pcap'
+CICIDS_TIME = './dataset/CICIDS-2017/pcap/attack_time.csv'
 
 # CICIDS2017-improved
-CICIDS_2_DIR = '/home/lry/pythondata/dataset/CICIDS2017_improved'
+CICIDS_2_DIR = './dataset/CICIDS2017_improved'
 CICIDS_2_IP_COLS = [
     'Src IP', 'Dst IP'
 ]
@@ -100,14 +100,14 @@ CICIDS_2_CLIENT_IPS = [
     '192.168.10.25'
 ]
 
-CSE_DIR = '/home/lry/pythondata/venv/lry/dataset/CSE-CICIDS-2018-improved'
+CSE_DIR = './dataset/CSE-CICIDS-2018-improved'
 CSE_SERVER_IPS = [
     '172.31.69.25', 
     '172.31.69.28', 
 ]
 
 # UNSW-NB15
-UNSW_DIR = '/home/lry/pythondata/dataset/UNSW-NB15/train_test'
+UNSW_DIR = './dataset/UNSW-NB15/train_test'
 UNSW_DICT = {
     'TRAIN': os.path.join(UNSW_DIR, 'UNSW_NB15_training-set.csv'),
     'TEST': os.path.join(UNSW_DIR, 'UNSW_NB15_testing-set.csv')
@@ -126,7 +126,7 @@ UNSW_CAT_COL = 'attack_cat'
 UNSW_LABEL_COL = 'label'
 
 # TON-IoT
-TON_DIR = '/home/lry/pythondata/dataset/TON-IoT/attack_time'
+TON_DIR = './dataset/TON-IoT/attack_time'
 TONIOT_IPS = ['3.122.49.24']
 
 # custom feature vector
