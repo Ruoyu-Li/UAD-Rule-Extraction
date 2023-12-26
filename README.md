@@ -31,3 +31,8 @@ We encourage you to delve into each feature by clicking on the available links t
 git clone https://github.com/Ruoyu-Li/UAD-Rule-Extraction
 ```
 
+### Test
+
+```bash
+run KITree_main.ipynb
+```
