@@ -1,0 +1,9 @@
+dataset,model,rule_num
+cicids_custom,AE,17
+cicids_custom,VAE,27
+cicids_custom,OCSVM,25
+cicids_custom,IForest,15
+toniot_custom,AE,29
+toniot_custom,VAE,27
+toniot_custom,OCSVM,17
+toniot_custom,IForest,17
