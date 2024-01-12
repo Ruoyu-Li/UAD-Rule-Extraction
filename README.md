@@ -13,7 +13,7 @@ We conduct comprehensive experiments on the explanation of four distinct unsuper
 
 ### Citation
 
-We encourage you to delve into each feature by clicking on the available links to fully understand what StreamDiffusion offers. If our work assists you, we would appreciate it if you acknowledge it in your citations：
+If our work assists you, we would appreciate it if you acknowledge it in your citations：
 ```bash
 @inproceedings{li2023interpreting,
   title={Interpreting Unsupervised Anomaly Detection in Security via Rule Extraction},
