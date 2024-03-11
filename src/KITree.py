@@ -47,7 +47,6 @@ class KITree():
         """
         train a tree model
         """
-        FQA_outfile = open("FQA_outfile.txt", "a")  # 打开文件以便写入
 
         self.data = X
         self.score = s
@@ -99,7 +98,7 @@ class KITree():
 
     def normalize_score(self, score):
         """
-        New: 每次分裂前对score标准化然后使用Sigmoid变为0-1的数值
+        Normalize score range before splitting
         """
         score_norm = StandardScaler().fit_transform(score.reshape(-1, 1)).reshape(-1, )
         return 1 / (1 + np.exp(-score_norm))
@@ -214,13 +213,13 @@ class KITree():
             return self.level
         return max(left_depth, right_depth)
     
-    def get_rule_num(self):
+    def get_leaf_num(self):
         """
         recursively get total rule number (from root to a leaf)
         """
         if self.left != None:
-            left_rule = self.left.get_rule_num()
-            right_rule = self.right.get_rule_num()
+            left_rule = self.left.get_leaf_num()
+            right_rule = self.right.get_leaf_num()
             return left_rule + right_rule
         else:
             return 1
@@ -330,13 +329,14 @@ class KITree():
             else:
                 symbol = '>'
             
+            x_value = utils.inverse_norm(normalizer, curr.feature_id, x[curr.feature_id])
             thres = utils.inverse_norm(normalizer, curr.feature_id, curr.feat_thres)
 
             rule_info = {
                     "feature_id": curr.feature_id,
                     "feature_name": feat_list[curr.feature_id],
                     "comparison": symbol,
-                    "value": x[curr.feature_id],
+                    "value": x_value,
                     "threshold": thres,
             }
 
@@ -358,27 +358,31 @@ class KITree():
             except:
                 lower_value = bound[0]
             
-            if x[i] >= bound[1]:
-                symbol = '>='
-                thres = upper_value
-            
-            if x[i] < bound[0]:
-                symbol = '<'
-                thres = lower_value
-            
+            satisfy = True if x[i] <= bound[1] else False
             rule_infos = {
                     "feature_id": i,
                     "feature_name": feat_list[i],
-                    "comparison": symbol,
+                    "comparison": '<=',
                     "value": x_value,
-                    "threshold": thres,
+                    "threshold": upper_value,
+                    "satisfy": satisfy
             }
+            rules.append(rule_infos)
 
+            satisfy = True if x[i] > bound[0] else False
+            rule_infos = {
+                    "feature_id": i,
+                    "feature_name": feat_list[i],
+                    "comparison": '>',
+                    "value": x_value,
+                    "threshold": lower_value,
+                    "satisfy": satisfy
+            }
             rules.append(rule_infos)
         
 
         # 删除掉-inf，然后使用集合来删除重复项
-        rules = [rule for rule in rules if rule['threshold'] != float('-inf')]
+        rules = [rule for rule in rules if rule['threshold'] != float('-inf') and rule['threshold'] != float('inf')]
         unique_rules_info = list({(info['feature_id'], info['feature_name'], info['comparison'], info['value'], info['threshold']): info for info in rules}.values())
         
         return unique_subrules_info, unique_rules_info

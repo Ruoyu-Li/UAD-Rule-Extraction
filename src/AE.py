@@ -12,6 +12,7 @@ from utils import *
 from data_load import load_data
 
 torch.manual_seed(SEED)
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 EPOCH = 50
 BATCH_SIZE = 64
@@ -63,7 +64,7 @@ class AutoEncoder(nn.Module):
     
     def score_samples(self, X, cuda=True):
         if cuda:
-            X = torch.from_numpy(X).cuda(DEVICE).float()
+            X = torch.from_numpy(X).to(DEVICE).float()
         else:
             X = torch.from_numpy(X).float()
         _, recons = self.forward(X)
@@ -90,13 +91,13 @@ def train_process(dataset, subset):
     train_loader = DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
     eval_loader = DataLoader(eval_set, batch_size=BATCH_SIZE, drop_last=True)
 
-    ae = AutoEncoder(n_feat=n_feat).cuda(DEVICE)
+    ae = AutoEncoder(n_feat=n_feat).to(DEVICE)
     optimizer = torch.optim.Adam(ae.parameters(), lr=LR)
-    loss_func = nn.MSELoss().cuda(DEVICE)
+    loss_func = nn.MSELoss().to(DEVICE)
 
     for epoch in range(EPOCH):
         for i, (x, ) in enumerate(train_loader):
-            x = x.cuda(DEVICE)
+            x = x.to(DEVICE)
             _, x_rec = ae(x)
             loss_train = loss_func(x, x_rec)
             optimizer.zero_grad()
@@ -104,7 +105,7 @@ def train_process(dataset, subset):
             optimizer.step()
             # with torch.no_grad():
             #     for j, (x, ) in enumerate(eval_loader):
-            #         x = x.cuda(DEVICE)
+            #         x = x.to(DEVICE)
             #         _, x_rec = ae(x)
             #         loss_eval = loss_func(x, x_rec)
             if i % 100 == 0:
@@ -115,7 +116,7 @@ def train_process(dataset, subset):
     mse_list, y_list = [], []
     with torch.no_grad():
         for i, (x, y) in enumerate(eval_loader):
-            x = x.cuda(DEVICE)
+            x = x.to(DEVICE)
             _, x_rec = ae(x)
             mse = mse_each(x, x_rec)
             y[y != 0] = 1
@@ -150,7 +151,7 @@ def train_process(dataset, subset):
 
 
 def test_process(dataset, subset):
-    ae = torch.load(os.path.join(TARGET_MODEL_DIR, f'AE_{dataset}_{subset}.model')).cuda(DEVICE)
+    ae = torch.load(os.path.join(TARGET_MODEL_DIR, f'AE_{dataset}_{subset}.model')).to(DEVICE)
     ae.eval()
     with open(os.path.join(NORMALIZER_DIR, f'{dataset}_{subset}.norm'), 'rb') as f:
         normalizer = pickle.load(f)
@@ -167,7 +168,7 @@ def test_process(dataset, subset):
     mse_list, y_list = [], []
     with torch.no_grad():
         for i, (x, y) in enumerate(test_loader):
-            x = x.cuda(DEVICE)
+            x = x.to(DEVICE)
             _, x_rec = ae(x)
             mse = mse_each(x, x_rec).cpu()
             y_pred = (mse > thres).view(-1, ).int().cpu()

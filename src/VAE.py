@@ -13,6 +13,7 @@ from utils import *
 from data_load import load_data
 
 torch.manual_seed(SEED)
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 EPOCH = 50
 BATCH_SIZE = 32
@@ -129,7 +130,7 @@ class VAE(nn.Module):
     
     def score_samples(self, X, cuda=True):
         if cuda:
-            X = torch.from_numpy(X).cuda(DEVICE).float()
+            X = torch.from_numpy(X).to(DEVICE).float()
         else:
             X = torch.from_numpy(X).float()
         result = self.forward(X)
@@ -164,12 +165,12 @@ def train_process(dataset, subset):
     train_loader = DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
     eval_loader = DataLoader(eval_set, batch_size=BATCH_SIZE, drop_last=True)
 
-    vae = VAE(n_feat=n_feat).cuda(DEVICE)
+    vae = VAE(n_feat=n_feat).to(DEVICE)
     optimizer = torch.optim.Adam(vae.parameters(), lr=LR)
 
     for epoch in range(EPOCH):
         for i, (x, ) in enumerate(train_loader):
-            x = x.cuda(DEVICE)
+            x = x.to(DEVICE)
             result = vae(x)
             loss_train = vae.loss_func(*result)['loss']
             optimizer.zero_grad()
@@ -182,7 +183,7 @@ def train_process(dataset, subset):
     loss_list, y_list = [], []
     with torch.no_grad():
         for i, (x, y) in enumerate(eval_loader):
-            x = x.cuda(DEVICE)
+            x = x.to(DEVICE)
             result = vae(x)
             loss = vae.loss_func_each(*result)
             loss_list.append(loss)
@@ -217,7 +218,7 @@ def train_process(dataset, subset):
 
 
 def test_process(dataset, subset):
-    vae = torch.load(os.path.join(TARGET_MODEL_DIR, f'VAE_{dataset}_{subset}.model')).cuda(DEVICE)
+    vae = torch.load(os.path.join(TARGET_MODEL_DIR, f'VAE_{dataset}_{subset}.model')).to(DEVICE)
     vae.eval()
     with open(os.path.join(NORMALIZER_DIR, f'{dataset}_{subset}.norm'), 'rb') as f:
         normalizer = pickle.load(f)
@@ -234,7 +235,7 @@ def test_process(dataset, subset):
     loss_list, y_list = [], []
     with torch.no_grad():
         for i, (x, y) in enumerate(test_loader):
-            x = x.cuda(DEVICE)
+            x = x.to(DEVICE)
             result = vae(x)
             loss = vae.loss_func_each(*result).cpu()
             y_pred = (loss > thres).view(-1, ).int().cpu()

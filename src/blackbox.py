@@ -16,6 +16,7 @@ from AE import AutoEncoder
 from VAE import VAE
 
 torch.manual_seed(SEED)
+DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 def train_model(model_name, X_train, X_eval, y_eval, dataset, subset, save_model=False, **kwargs):
@@ -48,13 +49,13 @@ def train_AE(X_train, X_eval, y_eval, dataset, subset, save_model=False, **kwarg
     train_loader = DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
     eval_loader = DataLoader(eval_set, batch_size=BATCH_SIZE, drop_last=True)
 
-    ae = AutoEncoder(n_feat=n_feat).cuda(DEVICE)
+    ae = AutoEncoder(n_feat=n_feat).to(DEVICE)
     optimizer = torch.optim.Adam(ae.parameters(), lr=LR)
-    loss_func = nn.MSELoss().cuda(DEVICE)
+    loss_func = nn.MSELoss().to(DEVICE)
 
     for epoch in range(EPOCH):
         for i, (x, ) in enumerate(train_loader):
-            x = x.cuda(DEVICE)
+            x = x.to(DEVICE)
             _, x_rec = ae(x)
             loss_train = loss_func(x, x_rec)
             optimizer.zero_grad()
@@ -67,7 +68,7 @@ def train_AE(X_train, X_eval, y_eval, dataset, subset, save_model=False, **kwarg
     mse_list, y_list = [], []
     with torch.no_grad():
         for i, (x, y) in enumerate(eval_loader):
-            x = x.cuda(DEVICE)
+            x = x.to(DEVICE)
             _, x_rec = ae(x)
             mse = mse_each(x, x_rec)
             y[y != 0] = 1
@@ -113,12 +114,12 @@ def train_VAE(X_train, X_eval, y_eval, dataset, subset, save_model=False, **kwar
     train_loader = DataLoader(train_set, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
     eval_loader = DataLoader(eval_set, batch_size=BATCH_SIZE, drop_last=True)
 
-    vae = VAE(n_feat=n_feat).cuda(DEVICE)
+    vae = VAE(n_feat=n_feat).to(DEVICE)
     optimizer = torch.optim.Adam(vae.parameters(), lr=LR)
 
     for epoch in range(EPOCH):
         for i, (x, ) in enumerate(train_loader):
-            x = x.cuda(DEVICE)
+            x = x.to(DEVICE)
             result = vae(x)
             loss_train = vae.loss_func(*result)['loss']
             optimizer.zero_grad()
@@ -131,7 +132,7 @@ def train_VAE(X_train, X_eval, y_eval, dataset, subset, save_model=False, **kwar
     loss_list, y_list = [], []
     with torch.no_grad():
         for i, (x, y) in enumerate(eval_loader):
-            x = x.cuda(DEVICE)
+            x = x.to(DEVICE)
             result = vae(x)
             loss = vae.loss_func_each(*result)
             loss_list.append(loss)

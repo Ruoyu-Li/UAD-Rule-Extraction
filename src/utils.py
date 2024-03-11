@@ -53,6 +53,11 @@ def print_class_distribution(predicted_labels):
     for label, percentage in distribution.items():
         print(f"Class {label}: {percentage * 100:.2f}%")
 
+# randomly perturb data
+def perturb_data_point(data_point, delta=0.01):
+    d = np.random.uniform(-delta, delta, data_point.shape)
+    return data_point + d
+
 # Evaluate predictions (Simple)
 def evaluate_predictions(y_test, predicted_labels, average=None):
     conf_matrix = confusion_matrix(y_test, predicted_labels)
@@ -60,21 +65,69 @@ def evaluate_predictions(y_test, predicted_labels, average=None):
     tn, fp, fn, tp = tn/(tn+fp), fp/(tn+fp), fn/(fn+tp), tp/(fn+tp)
     # print("Confusion matrix:")
     # print(conf_matrix)
-    # print("TP : ", tp)
-    # print("FP : ", fp)
-    # print("TN : ", tn)
-    # print("FN : ", fn)
+    print("TPR: ", tp)
+    print("FPR: ", fp)
+    print("TNR: ", tn)
+    print("FNR: ", fn)
 
     accuracy = accuracy_score(y_test, predicted_labels)
-    precision = precision_score(y_test, predicted_labels, average=average)
-    recall = recall_score(y_test, predicted_labels, average=average)
-    f1 = f1_score(y_test, predicted_labels, average=average)
+    precision = precision_score(y_test, predicted_labels)
+    recall = recall_score(y_test, predicted_labels)
+    f1 = f1_score(y_test, predicted_labels)
 
-    # print("Accuracy:", accuracy)
-    # print("Precision:", precision)
-    # print("Recall:", recall)
-    # print("F1 Score:", f1)
-    return tn, fp, fn, tp, accuracy, precision, recall, f1
+    print("Accuracy:", accuracy)
+    print("Precision:", precision)
+    print("Recall:", recall)
+    print("F1 Score:", f1)
+    # return tn, fp, fn, tp, accuracy, precision, recall, f1
+
+
+# Evaluate rule model
+def evaluate_rule_model(test_target, predictions, original_predictions, perturbed_predictions):
+    # Calculate classification metrics
+    accuracy = accuracy_score(test_target, predictions)
+    precision = precision_score(test_target, predictions,)
+    recall = recall_score(test_target, predictions)
+    f1 = f1_score(test_target, predictions)
+    print("Accuracy:", accuracy)
+    print("Precision:", precision)
+    print("Recall:", recall)
+    print("F1 Score:", f1)
+
+    # Calculate evaluation metrics
+    input_instances = len(test_target)
+
+    # Completeness
+    covered_by_rules = sum([1 for pred, true_label in zip(predictions, test_target) if pred == true_label and pred == 0])
+    completeness = covered_by_rules / input_instances
+
+    # Correctness
+    correctly_classified = sum([1 for pred, true_label in zip(predictions, test_target) if pred == true_label])
+    correctness = correctly_classified / input_instances
+
+    # Fidelity
+    consistent_predictions = np.sum(np.all([original_predictions == predictions], axis=0))
+    fidelity = consistent_predictions / input_instances
+    print("Fidelity:", fidelity)
+    
+    robustness_sum = 0
+    for i, prediction in enumerate(predictions):
+        if prediction == perturbed_predictions[i]:
+            robustness_sum += 1
+    robustness = robustness_sum / input_instances
+    print("robustness", robustness)
+
+    # Print confusion_matrix results
+    conf_matrix = confusion_matrix(test_target, predictions)
+    # print("Confusion Matrix:")
+    # print(conf_matrix)
+    tn, fp, fn, tp = np.resize(conf_matrix.ravel(), 4)
+    tn, fp, fn, tp = tn/(tn+fp), fp/(tn+fp), fn/(fn+tp), tp/(fn+tp)
+    print("TPR: ", tp)
+    print("FPR: ", fp)
+    print("TNR: ", tn)
+    print("FNR: ", fn)
+
 
 # Evaluate_and_save_results
 def evaluate_and_save_results_Hyperparameters( test_target, predictions, original_predictions, perturbed_predictions, dataset, baseline='None', black_model=None, max_level=5, n_beam=10, rho=0.3, eta=0.1):
