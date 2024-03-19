@@ -34,7 +34,9 @@ git clone https://github.com/Ruoyu-Li/UAD-Rule-Extraction.git
 
 Please refer to ```example.ipynb``` where we give concrete usage examples, including how to extract rules and several useful functions of the rule model.
 
-Update: We have included three datasets used in our experiments in ```./dataset/```, which can be easily loaded by using ```load_data()``` function in ```data_load.py```.
+Update: We have included three datasets used in our experiments in ```./dataset/```, which can be easily loaded by using ```load_data()``` function in ```data_load.py```. 
+
+Note: Failure may occur when downloading the datasets due to limited bandwidth of Git LFS. In such cases, enter the ```./dataset/``` path and run the script ```bash script.sh```, which will download the datasets from another cloud backup.
 
 ## Our Poster at NeurIPS '23
 
