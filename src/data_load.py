@@ -24,9 +24,12 @@ def load_data(dataset, subset, mode='train', **kwargs):
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=SEED)
     if mode == 'train':
         X_train, X_eval, y_train, y_eval = train_test_split(X_train, y_train, test_size=0.25, random_state=SEED)
-        X_train, y_train = X_train[y_train == 0], y_train[y_train == 0]
+        try:
+            if kwargs['biclass'] == False:
+                X_train, y_train = X_train[y_train == 0], y_train[y_train == 0]
+        except:
+            X_train, y_train = X_train[y_train == 0], y_train[y_train == 0]
         if 'random_select' in kwargs:
-            X_train = X_train[y_train == 0]
             idx_rand = np.random.randint(0, X_train.shape[0], kwargs['random_select'])
             X_train, y_train = X_train[idx_rand], y_train[idx_rand]
 

@@ -186,11 +186,12 @@ class ExtBound():
     def set_bound(self):
         if (self.ext_bound[:, 1] == -np.inf).all():
             self.bound = self.ext_bound
-        self.bound = np.zeros(self.int_bound.shape)
-        n_dim = self.int_bound.shape[0]
-        for dim in range(n_dim):
-            self.bound[dim, 0] = max(self.int_bound[dim, 0], self.ext_bound[dim, 0])
-            self.bound[dim, 1] = min(self.int_bound[dim, 1], self.ext_bound[dim, 1])
+        else:
+            self.bound = np.zeros(self.int_bound.shape)
+            n_dim = self.int_bound.shape[0]
+            for dim in range(n_dim):
+                self.bound[dim, 0] = max(self.int_bound[dim, 0], self.ext_bound[dim, 0])
+                self.bound[dim, 1] = min(self.int_bound[dim, 1], self.ext_bound[dim, 1])
         
     def get_bound(self):
         return self.bound

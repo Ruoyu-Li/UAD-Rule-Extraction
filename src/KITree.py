@@ -185,6 +185,16 @@ class KITree():
                 print(f'dim {i} feat {feat_list[i]} exceed upper bound: {x_value} >= {upper_value}')
             if x[i] < bound[0]:
                 print(f'dim {i} feat {feat_list[i]} under lower bound: {x_value} < {lower_value}')
+    
+    def predict_final_rule(self, x):
+        """
+        return final ext rule of given sample
+        """
+        curr = self
+        while curr.feature_id != None:
+            nx, indicator = curr.next_node(x)
+            curr = nx
+        return curr.ext.bound, curr.ext.int_bound
 
     def next_node(self, x):
         """
@@ -271,6 +281,19 @@ class KITree():
             return
         else:
             return {tuple(rule): self.ext.ext_bound}
+
+    def get_leaf_rules(self):
+        """
+        get all leaf bounds
+        """
+        if self.feature_id == None:
+            return [self.ext.bound]
+        
+        leaf_bounds = []
+        leaf_bounds.extend(self.left.get_leaf_rules())
+        leaf_bounds.extend(self.right.get_leaf_rules())
+        
+        return leaf_bounds
 
     def extract_thresholds_from_pred_rules(pred_rules):
         rules_info = []
@@ -386,3 +409,84 @@ class KITree():
         unique_rules_info = list({(info['feature_id'], info['feature_name'], info['comparison'], info['value'], info['threshold']): info for info in rules}.values())
         
         return unique_subrules_info, unique_rules_info
+    
+    def interpret_sample(self, x):
+        """
+        Calculate Feature Importance with rules for the model given a single data point
+        """
+        y = self.predict(x.reshape(1, -1))[0]
+        bound, int_bound = self.predict_final_rule(x)
+        num_features = x.shape[0]
+
+        weight = np.zeros(num_features)
+
+        for dim in range(num_features):
+            if y == 1:
+                if bound[dim, 1] == -np.inf:
+                    if (int_bound[dim, 0] != -np.inf) or (int_bound[dim, 1] != np.inf):
+                        weight[dim] = int_bound[dim, 1] - int_bound[dim, 0]
+                elif bound[dim, 0] <= x[dim] <= bound[dim, 1]:
+                    pass
+                elif x[dim] < bound[dim, 0]:
+                    weight[dim] = bound[dim, 0] - x[dim]
+                else:
+                    weight[dim] = x[dim] - bound[dim, 1]
+            else:
+                if bound[dim, 0] == -np.inf or bound[dim, 1] == np.inf:
+                    pass
+                else:
+                    weight[dim] = 1 / (bound[dim, 1] - bound[dim, 0])
+    
+        return weight
+    
+    def counterfactual(self, x, model):
+        """
+        Calculate Counterfactual with rules for the model given a single data point
+        """
+        def calculate_delta(rule):
+            delta = np.zeros(rule.shape[0])
+            for i in range(rule.shape[0]):
+                if rule[i, 0] == -np.inf or rule[i, 1] == np.inf:
+                    delta[i] = 0.05
+                else:
+                    delta[i] = (rule[i, 1] - rule[i, 0]) * 0.05
+            return delta
+
+        def apply_rule_modification(rule, x):
+            x_copy = x.copy()
+            counter_low_idx = np.where(x <= rule[:, 0])[0]
+            counter_up_idx = np.where(x > rule[:, 1])[0]
+            delta = calculate_delta(rule)
+            if len(counter_low_idx) != 0:
+                x_copy[counter_low_idx] = rule[counter_low_idx, 0] + delta[counter_low_idx]
+            if len(counter_up_idx) != 0:
+                x_copy[counter_up_idx] = rule[counter_up_idx, 1] - delta[counter_up_idx]
+            return x_copy
+        
+        def select_minimum_change(candicate_pool, x):
+            min_distance = np.inf
+            for i in range(len(candicate_pool)):
+                cf_proto = candicate_pool[i]
+                proximity = np.linalg.norm(cf_proto - x, ord=1) / x.shape[0]
+                sparsity = (cf_proto != x).sum() / x.shape[0]
+                distance = proximity + sparsity
+                if distance < min_distance:
+                    min_distance = distance
+                    cf_proto = candicate_pool[i]
+            return cf_proto
+        
+        # start from here
+        rules = self.get_leaf_rules()
+        candicate_pool = []
+        for rule in rules:
+            if (rule[:, 0] == -np.inf).all():
+                continue
+            cf_proto = apply_rule_modification(rule, x)
+            if model.predict(cf_proto.reshape(1, -1)) == 0:
+                candicate_pool.append(cf_proto)
+            
+        if candicate_pool:
+            cf_proto = select_minimum_change(candicate_pool, x)
+            return cf_proto
+        else:
+            return None
