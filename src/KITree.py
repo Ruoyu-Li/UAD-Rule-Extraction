@@ -439,7 +439,7 @@ class KITree():
     
         return weight
     
-    def counterfactual(self, x, model):
+    def counterfactual(self, x, model, k=1):
         """
         Calculate Counterfactual with rules for the model given a single data point
         """
@@ -464,16 +464,17 @@ class KITree():
             return x_copy
         
         def select_minimum_change(candicate_pool, x):
-            min_distance = np.inf
+            sorted_candicates = []
             for i in range(len(candicate_pool)):
                 cf_proto = candicate_pool[i]
                 proximity = np.linalg.norm(cf_proto - x, ord=1) / x.shape[0]
                 sparsity = (cf_proto != x).sum() / x.shape[0]
                 distance = proximity + sparsity
-                if distance < min_distance:
-                    min_distance = distance
-                    cf_proto = candicate_pool[i]
-            return cf_proto
+                sorted_candicates.append((cf_proto, distance))
+            # Sort the candidates by distance
+            sorted_candicates.sort(key=lambda item: item[1])
+            # Return the sorted list of cf_proto
+            return [item[0] for item in sorted_candicates]
         
         # start from here
         rules = self.get_leaf_rules()
@@ -486,7 +487,6 @@ class KITree():
                 candicate_pool.append(cf_proto)
             
         if candicate_pool:
-            cf_proto = select_minimum_change(candicate_pool, x)
-            return cf_proto
+            return select_minimum_change(candicate_pool, x)[:k]
         else:
             return None
